@@ -1,0 +1,72 @@
+{
+  "name": "doble-seal",
+  "version": "1.0.0",
+  "description": "Gestor de certificados autofirmados para desarrollo local en Linux",
+  "main": "src/main.js",
+  "author": {
+    "name": "Danidoble",
+    "email": "ddanidoble@gmail.com",
+    "url": "https://danidoble.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/danidoble/doble-seal#readme",
+  "bugs": {
+    "url": "https://github.com/danidoble/doble-seal/issues",
+    "email": "ddanidoble@gmail.com"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "start-safe": "./start.sh",
+    "build": "electron-builder",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --publish=never",
+    "install-helper": "./install-helper.sh"
+  },
+  "devDependencies": {
+    "electron": "^27.3.11",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "fs-extra": "^11.3.1",
+    "node-forge": "^1.3.1"
+  },
+  "build": {
+    "appId": "com.danidoble.doble-seal",
+    "productName": "Doble Seal",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Utility"
+    },
+    "extraFiles": [
+      {
+        "from": "src/helpers/hosts-helper.sh",
+        "to": "resources/hosts-helper.sh",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  }
+}

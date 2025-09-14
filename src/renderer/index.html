@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doble Seal - Gestor de Certificados</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>
+                    <span class="icon">🔒</span>
+                    Doble Seal
+                </h1>
+                <p>Gestor de certificados autofirmados para desarrollo local</p>
+            </div>
+            <div class="header-actions">
+                <button id="install-ca-btn" class="btn btn-secondary">
+                    <span class="icon">🏛️</span>
+                    Instalar CA
+                </button>
+                <button id="install-ca-chrome-btn" class="btn btn-secondary">
+                    <span class="icon">🌐</span>
+                    CA en Chrome
+                </button>
+                <button id="regenerate-ca-btn" class="btn btn-warning" title="Regenerar certificado CA raíz">
+                    <span class="icon">🔄</span>
+                    Regenerar CA
+                </button>
+                <button id="open-config-btn" class="btn btn-secondary">
+                    <span class="icon">📁</span>
+                    Abrir Configuración
+                </button>
+            </div>
+        </header>
+
+        <!-- CA Status Banner -->
+        <div id="ca-status" class="status-banner hidden">
+            <div class="status-content">
+                <span class="status-icon">⚠️</span>
+                <span class="status-text">CA no instalado en el sistema</span>
+                <button id="install-ca-banner-btn" class="btn btn-small btn-warning">Instalar Ahora</button>
+            </div>
+        </div>
+
+        <!-- CA Info Panel -->
+        <div id="ca-info" class="ca-info-panel hidden">
+            <div class="ca-info-content">
+                <div class="ca-info-header">
+                    <span class="icon">🔐</span>
+                    <h3>Información del CA Root</h3>
+                </div>
+                <div class="ca-info-details">
+                    <div class="ca-info-item">
+                        <label>Válido hasta:</label>
+                        <span id="ca-valid-to" class="ca-info-value">-</span>
+                    </div>
+                    <div class="ca-info-item">
+                        <label>Estado:</label>
+                        <span id="ca-status-text" class="ca-info-value">-</span>
+                    </div>
+                    <div class="ca-info-item">
+                        <label>Días restantes:</label>
+                        <span id="ca-days-remaining" class="ca-info-value">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="certificates">
+                    <span class="icon">📄</span>
+                    Certificados
+                </button>
+                <button class="tab-btn" data-tab="hosts">
+                    <span class="icon">🌐</span>
+                    Hosts
+                </button>
+                <button class="tab-btn" data-tab="backups">
+                    <span class="icon">💾</span>
+                    Backups
+                </button>
+            </div>
+
+            <!-- Certificates Tab -->
+            <div id="certificates-tab" class="tab-content active">
+                <div class="tab-header">
+                    <h2>Certificados SSL</h2>
+                    <button id="new-cert-btn" class="btn btn-primary">
+                        <span class="icon">➕</span>
+                        Nuevo Certificado
+                    </button>
+                </div>
+
+                <div id="certificates-list" class="certificates-grid">
+                    <!-- Los certificados se cargarán dinámicamente -->
+                </div>
+
+                <div id="no-certificates" class="empty-state hidden">
+                    <div class="empty-icon">📄</div>
+                    <h3>No hay certificados</h3>
+                    <p>Crea tu primer certificado para empezar</p>
+                    <button class="btn btn-primary" onclick="showNewCertificateModal()">
+                        Crear Certificado
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hosts Tab -->
+            <div id="hosts-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Gestión de Hosts</h2>
+                    <p class="tab-description">
+                        Administra las entradas en tu archivo /etc/hosts para que los dominios apunten a localhost
+                    </p>
+                    <div class="tab-actions">
+                        <button id="cleanup-duplicates-btn" class="btn btn-secondary btn-small">
+                            <span class="icon">🧹</span>
+                            Limpiar Duplicados
+                        </button>
+                    </div>
+                </div>
+
+                <div id="hosts-list" class="hosts-list">
+                    <!-- Los hosts se cargarán dinámicamente -->
+                </div>
+
+                <div id="no-hosts" class="empty-state">
+                    <div class="empty-icon">🌐</div>
+                    <h3>No hay entradas de hosts</h3>
+                    <p>Los dominios con certificados pueden añadirse al archivo hosts</p>
+                </div>
+            </div>
+
+            <!-- Backups Tab -->
+            <div id="backups-tab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Backups de Hosts</h2>
+                    <p class="tab-description">
+                        Historial de backups del archivo /etc/hosts realizados antes de cada modificación
+                    </p>
+                </div>
+
+                <div id="backups-list" class="backups-list">
+                    <!-- Los backups se cargarán dinámicamente -->
+                </div>
+
+                <div id="no-backups" class="empty-state">
+                    <div class="empty-icon">💾</div>
+                    <h3>No hay backups</h3>
+                    <p>Los backups se crearán automáticamente al modificar el archivo hosts</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Modal para nuevo certificado -->
+        <div id="new-cert-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Crear Nuevo Certificado</h3>
+                    <button class="modal-close" onclick="hideNewCertificateModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="new-cert-form">
+                        <div class="form-group">
+                            <label for="domain">Dominio Principal *</label>
+                            <input type="text" id="domain" name="domain" placeholder="ejemplo.local" required>
+                            <small>Nombre del dominio principal para el certificado</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sans">Nombres Alternativos (SANs)</label>
+                            <textarea id="sans" name="sans" placeholder="www.ejemplo.local&#10;api.ejemplo.local&#10;admin.ejemplo.local" rows="3"></textarea>
+                            <small>Un dominio por línea (opcional)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="duration">Duración en días</label>
+                            <select id="duration" name="duration">
+                                <option value="30">30 días</option>
+                                <option value="90">90 días</option>
+                                <option value="365" selected>1 año (365 días)</option>
+                                <option value="730">2 años (730 días)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="add-to-hosts" name="addToHosts" checked>
+                                <span class="checkmark"></span>
+                                Añadir al archivo /etc/hosts automáticamente
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="hideNewCertificateModal()">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="createCertificate()">
+                        <span class="icon">🔒</span>
+                        Crear Certificado
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de confirmación -->
+        <div id="confirm-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="confirm-title">Confirmar acción</h3>
+                    <button class="modal-close" onclick="hideConfirmModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirm-message">¿Estás seguro de que quieres realizar esta acción?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="hideConfirmModal()">
+                        Cancelar
+                    </button>
+                    <button type="button" id="confirm-action-btn" class="btn btn-danger">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para rutas de certificados -->
+        <div id="certificate-paths-modal" class="modal hidden">
+            <div class="modal-content large-modal">
+                <div class="modal-header">
+                    <h3 id="paths-domain-title">Rutas de Certificado</h3>
+                    <button class="modal-close" onclick="hideCertificatePathsModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="paths-section">
+                        <h4>Archivos de Certificado</h4>
+                        <div class="path-item">
+                            <label>Certificado:</label>
+                            <div class="path-display">
+                                <code id="cert-path"></code>
+                                <button class="btn btn-small btn-secondary copy-btn" onclick="copyToClipboard('cert-path')">
+                                    <span class="icon">📋</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="path-item">
+                            <label>Clave privada:</label>
+                            <div class="path-display">
+                                <code id="key-path"></code>
+                                <button class="btn btn-small btn-secondary copy-btn" onclick="copyToClipboard('key-path')">
+                                    <span class="icon">📋</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="path-item">
+                            <label>Cadena completa:</label>
+                            <div class="path-display">
+                                <code id="fullchain-path"></code>
+                                <button class="btn btn-small btn-secondary copy-btn" onclick="copyToClipboard('fullchain-path')">
+                                    <span class="icon">📋</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="path-item">
+                            <label>CA:</label>
+                            <div class="path-display">
+                                <code id="ca-path"></code>
+                                <button class="btn btn-small btn-secondary copy-btn" onclick="copyToClipboard('ca-path')">
+                                    <span class="icon">📋</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nginx-section">
+                        <h4>Configuración Nginx</h4>
+                        <div class="nginx-config">
+                            <pre id="nginx-config"></pre>
+                            <button class="btn btn-small btn-secondary copy-btn" onclick="copyToClipboard('nginx-config')">
+                                <span class="icon">📋</span>
+                                Copiar Configuración
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="copyAllPaths()">
+                        <span class="icon">📋</span>
+                        Copiar Todo al Portapapeles
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="hideCertificatePathsModal()">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toast-container" class="toast-container"></div>
+
+        <!-- Loading overlay -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p id="loading-message">Procesando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

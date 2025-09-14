@@ -1,0 +1,27 @@
+node_modules/
+dist/
+.DS_Store
+.env
+.env.local
+.env.production
+*.log
+*.pid
+*.seed
+*.pid.lock
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Electron specific
+out/
+app/
+release/
+
+# Certificate files (for development)
+*.pem
+*.crt
+*.key
+*.p12
+*.pfx
