@@ -24,8 +24,8 @@
     "install-helper": "./install-helper.sh"
   },
   "devDependencies": {
-    "electron": "^27.3.11",
-    "electron-builder": "^24.13.3"
+    "electron": "^35.7.5",
+    "electron-builder": "^26.0.12"
   },
   "dependencies": {
     "fs-extra": "^11.3.1",
