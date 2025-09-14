@@ -33,7 +33,7 @@
   },
   "build": {
     "appId": "com.danidoble.doble-seal",
-    "productName": "Doble Seal",
+    "productName": "DobleSeal",
     "directories": {
       "output": "dist"
     },
@@ -57,7 +57,8 @@
           ]
         }
       ],
-      "category": "Utility"
+      "category": "Utility",
+      "icon": "build/icons"
     },
     "extraFiles": [
       {
