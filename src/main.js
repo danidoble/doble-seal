@@ -118,6 +118,15 @@ class MainApp {
       }
     });
 
+    ipcMain.handle('certificates:add-domains', async (event, { domain, newDomains = [] }) => {
+      try {
+        return await this.certificateManager.addDomainsToCertificate(domain, newDomains);
+      } catch (error) {
+        console.error('Error adding domains to certificate:', error);
+        throw error;
+      }
+    });
+
     ipcMain.handle('certificates:get-paths', async (event, domain) => {
       try {
         return await this.certificateManager.getCertificatePaths(domain);

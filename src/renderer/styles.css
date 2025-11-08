@@ -846,6 +846,40 @@ body {
     right: 10px;
 }
 
+/* Add Domains Modal */
+.current-domains-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 8px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    min-height: 40px;
+}
+
+.domain-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.domain-tag:empty {
+    display: none;
+}
+
+.current-domains-list:empty::before {
+    content: 'No hay dominios actuales';
+    color: #6c757d;
+    font-size: 13px;
+    font-style: italic;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .app-container {

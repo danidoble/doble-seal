@@ -405,6 +405,134 @@ class CertificateManager {
     }
   }
 
+  async addDomainsToCertificate(domain, newDomains = []) {
+    try {
+      // Validar dominio principal
+      this.validateDomain(domain);
+
+      // Validar nuevos dominios
+      newDomains.forEach((san) => this.validateDomain(san));
+
+      console.log(`Agregando dominios al certificado ${domain}...`);
+
+      const domainDir = path.join(this.certsDir, domain);
+
+      if (!(await fs.pathExists(domainDir))) {
+        throw new Error(`Certificado no encontrado para ${domain}`);
+      }
+
+      // Leer certificado y clave existentes
+      const certPem = await fs.readFile(path.join(domainDir, "certificate.pem"), "utf8");
+      const keyPem = await fs.readFile(path.join(domainDir, "private-key.pem"), "utf8");
+      
+      // Cargar el certificado existente y la clave
+      const cert = forge.pki.certificateFromPem(certPem);
+      const keyPair = {
+        privateKey: forge.pki.privateKeyFromPem(keyPem),
+        publicKey: cert.publicKey
+      };
+
+      // Cargar CA
+      const { caKey, caCert } = await this.loadCA();
+
+      // Obtener los SANs actuales del certificado
+      const currentSans = [];
+      const sanExtension = cert.getExtension("subjectAltName");
+      if (sanExtension && sanExtension.altNames) {
+        sanExtension.altNames.forEach((altName) => {
+          if (altName.type === 2) { // DNS name
+            currentSans.push(altName.value);
+          }
+        });
+      }
+
+      // Combinar SANs actuales con los nuevos, evitando duplicados
+      const allSans = [...new Set([...currentSans, ...newDomains])];
+
+      // Remover el dominio principal si existe en SANs
+      const filteredSans = allSans.filter(san => san !== domain);
+
+      console.log(`SANs actuales: ${currentSans.join(', ')}`);
+      console.log(`Nuevos dominios: ${newDomains.join(', ')}`);
+      console.log(`SANs finales: ${allSans.join(', ')}`);
+
+      // Crear nuevo certificado reutilizando la clave pública
+      const newCert = forge.pki.createCertificate();
+      newCert.publicKey = keyPair.publicKey;
+      newCert.serialNumber = Date.now().toString();
+      newCert.validity.notBefore = cert.validity.notBefore;
+      newCert.validity.notAfter = new Date();
+      
+      // Usar la duración original calculando los días restantes
+      const originalDuration = Math.ceil((cert.validity.notAfter - cert.validity.notBefore) / (1000 * 60 * 60 * 24));
+      newCert.validity.notAfter.setDate(
+        newCert.validity.notBefore.getDate() + originalDuration
+      );
+
+      // Copiar subject e issuer del certificado original
+      newCert.setSubject(cert.subject.attributes);
+      newCert.setIssuer(caCert.subject.attributes);
+
+      // Preparar extensiones (copiar las existentes)
+      const extensions = [];
+      
+      for (let i = 0; i < cert.extensions.length; i++) {
+        const ext = cert.extensions[i];
+        if (ext.name !== "subjectAltName") {
+          extensions.push(ext);
+        }
+      }
+
+      // Añadir SAN actualizado (Subject Alternative Names)
+      const altNames = [{ type: 2, value: domain }]; // DNS name
+      filteredSans.forEach((san) => {
+        altNames.push({ type: 2, value: san });
+      });
+
+      extensions.push({
+        name: "subjectAltName",
+        altNames: altNames,
+      });
+
+      newCert.setExtensions(extensions);
+
+      // Firmar certificado con CA
+      newCert.sign(caKey, forge.md.sha256.create());
+
+      // Convertir a PEM
+      const newCertPem = forge.pki.certificateToPem(newCert);
+
+      // Guardar archivo del certificado actualizado
+      await fs.writeFile(path.join(domainDir, "certificate.pem"), newCertPem);
+      await fs.writeFile(path.join(domainDir, "fullchain.pem"), newCertPem);
+
+      // Actualizar metadatos
+      const metadata = await fs.readJson(this.metadataFile);
+      if (metadata.certificates[domain]) {
+        metadata.certificates[domain].sans = filteredSans;
+        metadata.certificates[domain].updated = new Date().toISOString();
+      }
+      await fs.writeJson(this.metadataFile, metadata, { spaces: 2 });
+
+      // Actualizar documentación
+      await this.generateDocumentation(domain, filteredSans, originalDuration);
+
+      console.log(`Dominios agregados al certificado ${domain}`);
+      return {
+        success: true,
+        message: `Dominios agregados correctamente al certificado ${domain}`,
+        data: {
+          domain: domain,
+          sans: allSans,
+          updated: new Date().toISOString()
+        },
+      };
+    } catch (error) {
+      console.error("Error adding domains to certificate:", error);
+      throw error;
+    }
+  }
+
   async getCertificatePaths(domain) {
     try {
       this.validateDomain(domain);

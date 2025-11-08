@@ -341,6 +341,10 @@ class DobleSealApp {
                             <span class="icon">🌐</span>
                             Añadir a Hosts
                         </button>
+                        <button class="btn btn-info btn-small" onclick="app.addDomainsModal('${domain}')">
+                            <span class="icon">➕</span>
+                            Agregar Dominios
+                        </button>
                         <button class="btn btn-info btn-small" onclick="app.showCertificatePaths('${domain}')">
                             <span class="icon">📄</span>
                             Ver Rutas
@@ -499,6 +503,77 @@ class DobleSealApp {
                 }
             }
         );
+    }
+
+    addDomainsModal(domain) {
+        const cert = this.certificates[domain];
+        if (!cert) return;
+
+        // Actualizar el formulario con los datos del certificado
+        document.getElementById('add-domains-domain').value = domain;
+        
+        // Mostrar dominios actuales
+        const currentDomainsList = document.getElementById('add-domains-current');
+        const allCurrentDomains = [domain, ...(cert.sans || [])];
+        currentDomainsList.innerHTML = allCurrentDomains.map(d => 
+            `<span class="domain-tag">${d}</span>`
+        ).join('');
+        
+        // Limpiar el textarea de nuevos dominios
+        document.getElementById('add-domains-new').value = '';
+        
+        // Mostrar modal
+        document.getElementById('add-domains-modal').classList.remove('hidden');
+    }
+
+    hideAddDomainsModal() {
+        document.getElementById('add-domains-modal').classList.add('hidden');
+        document.getElementById('add-domains-form').reset();
+    }
+
+    async addDomainstoCertificate() {
+        const domain = document.getElementById('add-domains-domain').value;
+        const newDomainsText = document.getElementById('add-domains-new').value.trim();
+        
+        if (!domain) {
+            this.showToast('error', 'Error', 'Dominio no especificado');
+            return;
+        }
+
+        if (!newDomainsText) {
+            this.showToast('error', 'Error', 'Debes especificar al menos un nuevo dominio');
+            return;
+        }
+
+        // Procesar nuevos dominios
+        const newDomains = newDomainsText.split('\n').map(d => d.trim()).filter(d => d);
+        
+        if (newDomains.length === 0) {
+            this.showToast('error', 'Error', 'Debes especificar al menos un nuevo dominio');
+            return;
+        }
+
+        this.showLoading('Agregando dominios al certificado...');
+        
+        try {
+            const result = await window.electronAPI.certificates.addDomains({
+                domain,
+                newDomains
+            });
+            
+            if (result.success) {
+                this.showToast('success', 'Dominios Agregados', result.message);
+                this.hideAddDomainsModal();
+                await this.loadCertificates();
+            } else {
+                this.showToast('error', 'Error', result.message || 'Error al agregar dominios');
+            }
+        } catch (error) {
+            console.error('Error adding domains to certificate:', error);
+            this.showToast('error', 'Error', 'Error al agregar dominios: ' + error.message);
+        } finally {
+            this.hideLoading();
+        }
     }
 
     // === HOSTS MANAGEMENT ===

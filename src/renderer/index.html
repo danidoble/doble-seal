@@ -232,6 +232,48 @@
             </div>
         </div>
 
+        <!-- Modal para agregar dominios -->
+        <div id="add-domains-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Agregar Dominios a Certificado</h3>
+                    <button class="modal-close" onclick="hideAddDomainsModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-domains-form">
+                        <div class="form-group">
+                            <label for="add-domains-domain">Certificado</label>
+                            <input type="text" id="add-domains-domain" name="domain" readonly>
+                            <small>Dominio del certificado a actualizar</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="add-domains-current">Dominios Actuales</label>
+                            <div id="add-domains-current" class="current-domains-list">
+                                <!-- Se cargarán dinámicamente -->
+                            </div>
+                            <small>Dominios ya incluidos en el certificado</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="add-domains-new">Nuevos Dominios *</label>
+                            <textarea id="add-domains-new" name="newDomains" placeholder="www.ejemplo.local&#10;api.ejemplo.local&#10;admin.ejemplo.local" rows="3" required></textarea>
+                            <small>Un dominio por línea (estos se agregarán al certificado)</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="hideAddDomainsModal()">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="addDomainstoCertificate()">
+                        <span class="icon">➕</span>
+                        Agregar Dominios
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal para rutas de certificados -->
         <div id="certificate-paths-modal" class="modal hidden">
             <div class="modal-content large-modal">

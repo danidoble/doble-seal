@@ -11,6 +11,7 @@ DobleSeal es una aplicación de escritorio construida con Electron que facilita 
 - **📄 Ver Rutas**: Copia rutas de archivos de certificados para configurar Nginx, Apache, etc.
 - **🌐 CA en Chrome**: Instala automáticamente el CA en Chrome/Chromium para desarrollo
 - **📋 Configuración Nginx**: Genera configuración SSL completa lista para usar
+- **➕ Agregar Dominios**: Añade nuevos dominios (SANs) a certificados existentes sin recrearlos
 
 ### Primer uso
 
@@ -23,6 +24,7 @@ DobleSeal es una aplicación de escritorio construida con Electron que facilita 
 - 🔒 **Generación de certificados SSL**: Crea certificados autofirmados con CA local
 - 🏛️ **Gestión de CA**: Instala automáticamente el CA en el sistema y Chrome
 - 📄 **Rutas de certificados**: Copia rutas para configuraciones de Nginx y otros servidores
+- ➕ **Agregar dominios**: Añade nuevos dominios a certificados existentes sin recrearlos
 - 🌐 **Gestión de hosts**: Modifica /etc/hosts de forma segura
 - 💾 **Backups automáticos**: Crea backups antes de modificar archivos del sistema
 - 🔐 **Seguridad**: Elevación puntual de privilegios sin ejecutar toda la app como root

@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     delete: (domain) => ipcRenderer.invoke('certificates:delete', domain),
     export: (domain) => ipcRenderer.invoke('certificates:export', domain),
     regenerate: (data) => ipcRenderer.invoke('certificates:regenerate', data),
+    addDomains: (data) => ipcRenderer.invoke('certificates:add-domains', data),
     getPaths: (domain) => ipcRenderer.invoke('certificates:get-paths', domain),
     copyPaths: (domain) => ipcRenderer.invoke('certificates:copy-paths', domain)
   },
